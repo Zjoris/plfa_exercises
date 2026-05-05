@@ -16,8 +16,8 @@ seven = suc (suc (suc (suc (suc (suc (suc zero))))))
 {-# BUILTIN NATURAL ℕ #-}
 
 import Relation.Binary.PropositionalEquality as Eq
-open Eq using (_≡_; refl)
-open Eq.≡-Reasoning using (begin_; step-≡-∣; _∎)
+open Eq using (_≡_; refl; cong; sym)
+open Eq.≡-Reasoning 
 
 _+_ : ℕ → ℕ → ℕ 
 zero + n    = n 
@@ -26,24 +26,12 @@ zero + n    = n
 _ : 2 + 3 ≡ 5 
 _ = refl
 
-{- Have to figure out how this chain of equations works in Agda 2.8.0 -}
-    -- begin
-    --   2 + 3 
-    -- ≡⟨⟩
-    --   (suc (suc zero)) + (suc (suc (suc zero)))
-    -- ≡〈〉
-    --     ?
-    -- ∎
--- _ : 1 + 1 ≡ 2
--- _ = 
---     begin
---         1 + 1 
---         ≡〈 refl 〉
---         2 
---         ∎
-
--- +-assoc : (m + n) + k ≡ m + (n + k)
--- +-assoc = ?
+_ = 
+    begin
+        1 + 1 
+        ≡⟨ refl ⟩
+        2 
+        ∎
 
 _*_ : ℕ → ℕ → ℕ
 zero * n = zero 
@@ -61,8 +49,32 @@ _ = refl
 
 _∸_ : ℕ → ℕ → ℕ
 m ∸ zero = m
-zero ∸ n = n 
+zero ∸ n = zero 
 (suc m) ∸ (suc n) = m ∸ n 
+
+n-n=0 : ∀ (n : ℕ) → n ∸ n ≡ zero 
+n-n=0 zero = refl
+n-n=0 (suc n) = 
+    begin
+      (suc n) ∸ (suc n)
+    ≡⟨ refl ⟩
+      n ∸ n
+    ≡⟨ n-n=0 n ⟩ 
+      zero
+    ∎
+
+plusMinId : ∀ (m n : ℕ) → m ≡ (m + n) ∸ n 
+plusMinId zero n = 
+    begin
+      zero
+    ≡⟨ refl ⟩
+      zero + zero 
+    ≡⟨ sym (n-n=0 n) ⟩ 
+      zero + (n ∸ n)
+    ≡⟨ refl ⟩ 
+      (zero + n) ∸ n
+    ∎
+plusMinId (suc m) n = {!   !} --cong (suc) (plusMinId m n)
 
 infixl 6 _+_ _∸_ 
 infixl 7 _*_ 
@@ -70,8 +82,7 @@ infixl 8 _^_
 
 {-# BUILTIN NATPLUS _+_ #-}
 {-# BUILTIN NATTIMES _*_ #-}
--- {-# BUILTIN NATMINUS _∸_ #-}
--- {-# BUILTIN NATEXP _^_ #-}
+{-# BUILTIN NATMINUS _∸_ #-}
 
 {- EXERCISE Binary numbers -}
 
@@ -104,6 +115,16 @@ Bin2Num = λ (b : Bin) → Bin2NumHelper b 0
 
 -- Proofs 
 
-_ : { n : ℕ } →  Bin2Num (Num2Bin n) ≡ n
-_ = {!   !} 
+ToFromNum : ∀ (n : ℕ) →  Bin2Num (Num2Bin n) ≡ n
+ToFromNum zero = refl
+ToFromNum (suc n) = 
+    begin 
+     Bin2Num (Num2Bin (suc n)) 
+    ≡⟨ refl ⟩ 
+     Bin2Num (Binsuc (Num2Bin n))
+    ≡⟨ {!   !} ⟩ 
+     suc (Bin2Num (Num2Bin n))
+    ≡⟨ cong suc (ToFromNum n) ⟩ 
+     suc n
+    ∎
 
