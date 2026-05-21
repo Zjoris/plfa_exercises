@@ -60,29 +60,52 @@ data _U_ (A : Set) (B : Set) : Set where
     total-helper (inl x) = inl (s≤s x)
     total-helper (inr x) = inr (s≤s x)
 
-+-suc : ∀ (n m : ℕ) → n + suc m ≡ suc (n + m)
-+-suc zero m = refl
-+-suc (suc n) m = cong suc (+-suc n m)
-
 pred : ℕ → ℕ 
 pred zero = zero 
 pred (suc n) = n
 
-_∸_ : ℕ → ℕ → ℕ
-zero ∸ n = zero 
-m ∸ zero = m 
-suc m ∸ suc n = m ∸ n 
+-- -- _∸_ : ℕ → ℕ → ℕ
+-- -- zero ∸ n = zero 
+-- -- m ∸ zero = m 
+-- -- suc m ∸ suc n = m ∸ n 
 
 =→≤ : {n m : ℕ} → n ≡ m → n ≤ m 
 =→≤ {zero} n=m = 0≤n
 =→≤ {suc n} {suc m} n=m = s≤s (=→≤ (cong (pred) n=m))
 
-m≤m+n : ∀ (n m : ℕ) → n ≤ (m + n) 
-m≤m+n zero m = 0≤n
-m≤m+n (suc n) m = {!   !} (s≤s (m≤m+n n m))
--- m≤m+n (suc n) zero = s≤s (m≤m+n n zero)
--- m≤m+n (suc n) (suc m) = s≤s {!   !}
+-- +-suc : ∀ (n m : ℕ) → suc (n + m) ≡ m + suc n
+-- +-suc n zero = cong suc (+-identityʳ n) 
+-- +-suc n (suc m) = {!   !}
+-- -- +-suc zero m = refl
+-- -- +-suc (suc n) m =  cong suc (+-suc n m)
+
+-- _ : {n m : ℕ} → suc n ≤ suc (n + m) → suc n ≤ suc n + m 
+-- _ = λ x → ≤-trans x (=→≤ (refl))
+
+m≤m+n : ∀ {n m : ℕ} → n ≤ (n + m) 
+m≤m+n {zero} = 0≤n
+m≤m+n {suc n} {m} = ≤-trans (s≤s m≤m+n) (≤-rflx)
 
 +-≤-mono : {n m k l : ℕ} → n ≤ m → k ≤ l → (n + k) ≤ (m + l) 
-+-≤-mono 0≤n k≤l = ≤-trans k≤l {!   !}
-+-≤-mono (s≤s n≤m) k≤l = {!   !}
++-≤-mono {m = m} {l = l} 0≤n k≤l = ≤-trans k≤l (≤-trans m≤m+n (=→≤ (+-comm l m)))
++-≤-mono (s≤s n≤m) k≤l = s≤s (+-≤-mono n≤m k≤l)
+
+*-≤-monoᴿ : {n m k : ℕ} → n ≤ m → k * n ≤ k * m 
+*-≤-monoᴿ {k = zero} n≤m = 0≤n
+*-≤-monoᴿ {k = suc k} n≤m = +-≤-mono n≤m (*-≤-monoᴿ {k = k} n≤m)
+
+n*0=0 : {n : ℕ} → n * zero ≤ zero 
+n*0=0 {zero} = 0≤n
+n*0=0 {suc n} = n*0=0 {n}
+
+*-suc : {n m : ℕ} → n * suc m ≡ n + n * m 
+*-suc {zero} = refl
+*-suc {suc n} = cong suc {!   !} 
+
+*-≤-monoᴸ : {n m k : ℕ} → n ≤ m → n * k ≤ m * k 
+*-≤-monoᴸ {k = zero} n≤m = ≤-trans n*0=0 0≤n 
+*-≤-monoᴸ {k = suc k} n≤m = {!   !} 
+
+
+*-≤-mono : {n m k l : ℕ} → n ≤ m → k ≤ l → (n * k) ≤ (m * l)
+*-≤-mono {m = m} n≤m k≤l = ≤-trans ({!   !}) (*-≤-monoᴿ {k = m} k≤l)
